@@ -1,3 +1,9 @@
+"""
+@author:Ivan Munoz-Rodriguez, Antonis Georgakakis and Angel Ruiz Camunas
+
+This script contain the functions to do the boostrapping and calculate the fractions
+"""
+
 import copy
 import logging
 from itertools import product
@@ -6,7 +12,8 @@ from itertools import product
 from colossus.halo import mass_defs
 import numpy as np
 import pandas as pd
-#from memory_profiler import profile
+
+# from memory_profiler import profile
 
 # import mockUniv.seed.seed_luminosity as seed_lumi
 import calc_frac_paper.selection_effects as select_eff
@@ -40,7 +47,14 @@ def _calc_num_agn(
     return nagn
 
 
-def get_resample_agns(df_num_gal_agn, mask_xrlumi_dict, num_realizations="default", mag_lim=False, sm_lim=False, id_label="id",):
+def get_resample_agns(
+    df_num_gal_agn,
+    mask_xrlumi_dict,
+    num_realizations="default",
+    mag_lim=False,
+    sm_lim=False,
+    id_label="id",
+):
     """
     Function that resample a given data frame with ids, num gal and num agns. Used to calculate error assotiated
     to the mean. From the data frame w number of galaxies/agns for diff. selection effect we generate a sample of
@@ -59,10 +73,9 @@ def get_resample_agns(df_num_gal_agn, mask_xrlumi_dict, num_realizations="defaul
     resampling
     """
 
-    #logger.info(f"Resampling clusters with {num_realizations} realizations")
+    # logger.info(f"Resampling clusters with {num_realizations} realizations")
 
-    rand_realiz = _get_random_realizations(
-        df_num_gal_agn, num_realizations, id_label)
+    rand_realiz = _get_random_realizations(df_num_gal_agn, num_realizations, id_label)
 
     n_gal_realizations_mag = []
     n_gal_realizations_sm = []
@@ -85,25 +98,28 @@ def get_resample_agns(df_num_gal_agn, mask_xrlumi_dict, num_realizations="defaul
         # LUMI
         for mask_xrlumi in mask_xrlumi_dict[0]:
             if loop_realization == 0:
-                n_agn_realizations_mag.update( { f"n_agn_mag_{mask_xrlumi}": 
-                                                [np.array(df_resample[f"n_agn_mag_{mask_xrlumi}"])]} )
+                n_agn_realizations_mag.update(
+                    {
+                        f"n_agn_mag_{mask_xrlumi}": [
+                            np.array(df_resample[f"n_agn_mag_{mask_xrlumi}"])
+                        ]
+                    }
+                )
                 n_agn_realizations_sm.update(
                     {
-                        f"n_agn_sm_{mask_xrlumi}": [np.array(df_resample[f"n_agn_sm_{mask_xrlumi}"])]
+                        f"n_agn_sm_{mask_xrlumi}": [
+                            np.array(df_resample[f"n_agn_sm_{mask_xrlumi}"])
+                        ]
                     }
                 )
             else:
                 n_agn_aux = n_agn_realizations_mag[f"n_agn_mag_{mask_xrlumi}"]
-                n_agn_aux.append(
-                    np.array(df_resample[f"n_agn_mag_{mask_xrlumi}"]))
-                n_agn_realizations_mag.update(
-                    {f"n_agn_mag_{mask_xrlumi}": n_agn_aux})
+                n_agn_aux.append(np.array(df_resample[f"n_agn_mag_{mask_xrlumi}"]))
+                n_agn_realizations_mag.update({f"n_agn_mag_{mask_xrlumi}": n_agn_aux})
 
                 n_agn_aux = n_agn_realizations_sm[f"n_agn_sm_{mask_xrlumi}"]
-                n_agn_aux.append(
-                    np.array(df_resample[f"n_agn_sm_{mask_xrlumi}"]))
-                n_agn_realizations_sm.update(
-                    {f"n_agn_sm_{mask_xrlumi}": n_agn_aux})
+                n_agn_aux.append(np.array(df_resample[f"n_agn_sm_{mask_xrlumi}"]))
+                n_agn_realizations_sm.update({f"n_agn_sm_{mask_xrlumi}": n_agn_aux})
     return (
         n_gal_realizations_mag,
         n_gal_realizations_sm,
@@ -114,7 +130,7 @@ def get_resample_agns(df_num_gal_agn, mask_xrlumi_dict, num_realizations="defaul
 
 def _get_random_realizations(df_num_gal_agn, num_realizations="default", id_label="id"):
     if num_realizations == "default":
-        num_realizations = 100 #len(df_num_gal_agn[id_label])
+        num_realizations = 100  # len(df_num_gal_agn[id_label])
 
     logger.info(f"Generating {num_realizations} random realizations")
     size_resample = len(df_num_gal_agn)
@@ -124,8 +140,7 @@ def _get_random_realizations(df_num_gal_agn, num_realizations="default", id_labe
     # rand_realiz = np.random.choice(df_num_gal_agn['id'],
     #                               size=(num_realizations, size_resample), replace=True)
     rand_realiz = np.random.choice(
-        df_num_gal_agn.index, size=(
-            num_realizations, size_resample), replace=True
+        df_num_gal_agn.index, size=(num_realizations, size_resample), replace=True
     )
     return rand_realiz
 
@@ -155,9 +170,7 @@ def _create_df_resample(mask_xrlumi_dict, mag_lim=False, sm_lim=False):
     for se, lx in product(se_labels, mask_xrlumi_dict.keys()):
         columns[f"f_{se}_{lx}"] = "f4"
 
-    df_resample_sum = pd.DataFrame(
-        {c: pd.Series(dtype=t) for c, t in columns.items()}
-    )
+    df_resample_sum = pd.DataFrame({c: pd.Series(dtype=t) for c, t in columns.items()})
 
     return df_resample_sum
 
@@ -185,8 +198,7 @@ def join_lc_lst(lc_list, BCG=False, only_sat=False):
         if loop_lc == 0:
             lc_catalogue_concat = copy.deepcopy(lc)
         else:
-            lc_catalogue_concat = lc_catalogue_concat.append(
-                lc, ignore_index=True)
+            lc_catalogue_concat = lc_catalogue_concat.append(lc, ignore_index=True)
     lc_catalogue_concat["delta_redshift"] = lc_catalogue_concat["final_redshift"] - lc.z
     lc_catalogue_concat["delta_RA"] = lc_catalogue_concat["RA"] - RA_lc
     lc_catalogue_concat["delta_dec"] = lc_catalogue_concat["dec"] - dec_lc
@@ -207,8 +219,12 @@ def _create_df_reseed_num_gal_agn_df(lc_catalogue, mask_xrlumi_dict):
     """
     Function that creates the dataframe where the number of gal/agn are saved after
     """
-    df_num_gal_agn = pd.DataFrame({"id_cluster_resed": lc_catalogue["id_clust_reseed"].unique()})
-    df_num_gal_agn[["id", "resed"]] = df_num_gal_agn["id_cluster_resed"].str.split( "_", 1, expand=True)
+    df_num_gal_agn = pd.DataFrame(
+        {"id_cluster_resed": lc_catalogue["id_clust_reseed"].unique()}
+    )
+    df_num_gal_agn[["id", "resed"]] = df_num_gal_agn["id_cluster_resed"].str.split(
+        "_", 1, expand=True
+    )
 
     df_num_gal_agn["n_gal_mag"] = np.nan
     df_num_gal_agn["n_gal_sm"] = np.nan
@@ -218,10 +234,19 @@ def _create_df_reseed_num_gal_agn_df(lc_catalogue, mask_xrlumi_dict):
     return df_num_gal_agn
 
 
-def _calc_num_gal_agn_lc_catalogue(df_num_gal_agn, lc, id_cluster_resed, m_cut, band,
-                 lx_lim, lgM_smCut, mask_gal_agn=True, mask_xrlumi_dict=False, extra_frac=False,):
-    """
-    """
+def _calc_num_gal_agn_lc_catalogue(
+    df_num_gal_agn,
+    lc,
+    id_cluster_resed,
+    m_cut,
+    band,
+    lx_lim,
+    lgM_smCut,
+    mask_gal_agn=True,
+    mask_xrlumi_dict=False,
+    extra_frac=False,
+):
+    """ """
     mask_mag = select_eff.mask_magnitude(m_cut, band, lc)
     mask_sm = select_eff.mask_mass(lgM_smCut, lc)
 
@@ -229,16 +254,23 @@ def _calc_num_gal_agn_lc_catalogue(df_num_gal_agn, lc, id_cluster_resed, m_cut, 
     mask_xrlumi_dict = mask_aux
 
     if m_cut != False:
-        df_num_gal_agn.loc[df_num_gal_agn["id_cluster_resed"] == id_cluster_resed, "n_gal_mag"] = len(lc[mask_mag])
+        df_num_gal_agn.loc[
+            df_num_gal_agn["id_cluster_resed"] == id_cluster_resed, "n_gal_mag"
+        ] = len(lc[mask_mag])
 
     if lgM_smCut != False:
-        df_num_gal_agn.loc[df_num_gal_agn["id_cluster_resed"] == id_cluster_resed, "n_gal_sm"] = len(lc[mask_sm])
+        df_num_gal_agn.loc[
+            df_num_gal_agn["id_cluster_resed"] == id_cluster_resed, "n_gal_sm"
+        ] = len(lc[mask_sm])
 
     for mask_xrlumi in mask_xrlumi_dict:
         mask_lx = mask_xrlumi_dict[mask_xrlumi]
 
         mask_sm_lx = np.logical_and(mask_lx, mask_sm)
-        df_num_gal_agn.loc[df_num_gal_agn["id_cluster_resed"] == id_cluster_resed, f"n_agn_sm_{mask_xrlumi}"] = len(lc[mask_sm_lx])
+        df_num_gal_agn.loc[
+            df_num_gal_agn["id_cluster_resed"] == id_cluster_resed,
+            f"n_agn_sm_{mask_xrlumi}",
+        ] = len(lc[mask_sm_lx])
         if mask_gal_agn:
             mask = np.logical_and(mask_mag, mask_lx)
         else:
@@ -259,21 +291,53 @@ def _calc_num_gal_agn_lc_catalogue(df_num_gal_agn, lc, id_cluster_resed, m_cut, 
     return df_num_gal_agn
 
 
-def get_num_galAgn(lc_catalogue,mask_xrlumi_dict,m_cut,band,lx_lim,lgM_smCut,mask_gal_agn=True,extra_frac=False,):
+def get_num_galAgn(
+    lc_catalogue,
+    mask_xrlumi_dict,
+    m_cut,
+    band,
+    lx_lim,
+    lgM_smCut,
+    mask_gal_agn=True,
+    extra_frac=False,
+):
     """ """
     df_num_gal_agn = _create_df_reseed_num_gal_agn_df(lc_catalogue, mask_xrlumi_dict)
     for id_cluster_resed, group in lc_catalogue.groupby("id_clust_reseed"):
-        df_num_gal_agn = _calc_num_gal_agn_lc_catalogue(df_num_gal_agn, group, id_cluster_resed, m_cut,band, lx_lim, lgM_smCut, 
-                                                    mask_gal_agn=mask_gal_agn,mask_xrlumi_dict=mask_xrlumi_dict,extra_frac=extra_frac,)
+        df_num_gal_agn = _calc_num_gal_agn_lc_catalogue(
+            df_num_gal_agn,
+            group,
+            id_cluster_resed,
+            m_cut,
+            band,
+            lx_lim,
+            lgM_smCut,
+            mask_gal_agn=mask_gal_agn,
+            mask_xrlumi_dict=mask_xrlumi_dict,
+            extra_frac=extra_frac,
+        )
     return df_num_gal_agn
 
 
 def _get_resample_reseed_sum(df_resed_resample, mask_xrlumi_dict, lgM_smCut, mag_cut):
     """ """
-    (n_gal_realizations_mag, n_gal_realizations_sm,n_agn_realizations_mag, n_agn_realizations_sm,) = get_resample_agns(df_resed_resample,
-       [mask_xrlumi_dict],num_realizations="default", mag_lim=mag_cut, sm_lim=lgM_smCut, id_label="id_cluster_resed",)
+    (
+        n_gal_realizations_mag,
+        n_gal_realizations_sm,
+        n_agn_realizations_mag,
+        n_agn_realizations_sm,
+    ) = get_resample_agns(
+        df_resed_resample,
+        [mask_xrlumi_dict],
+        num_realizations="default",
+        mag_lim=mag_cut,
+        sm_lim=lgM_smCut,
+        id_label="id_cluster_resed",
+    )
 
-    df_resample_sum = _create_df_resample(mask_xrlumi_dict, mag_lim=mag_cut, sm_lim=lgM_smCut)
+    df_resample_sum = _create_df_resample(
+        mask_xrlumi_dict, mag_lim=mag_cut, sm_lim=lgM_smCut
+    )
 
     for loop_realiz, ngal in enumerate(n_gal_realizations_mag):
         df_resample_sum = _add_realization_reseed_sum(
@@ -321,11 +385,29 @@ def _add_realization_reseed_sum(
     return df_resample_sum
 
 
-def get_resample_reseed_summed(lc_catalogue, mask_xrlumi_dict, mag_cut, band, lx_lim, 
-                                lgM_smCut, mask_gal_agn=True, extra_frac=False,):
+def get_resample_reseed_summed(
+    lc_catalogue,
+    mask_xrlumi_dict,
+    mag_cut,
+    band,
+    lx_lim,
+    lgM_smCut,
+    mask_gal_agn=True,
+    extra_frac=False,
+):
 
-    df_num_gal_agn = get_num_galAgn(lc_catalogue,mask_xrlumi_dict,mag_cut, band, lx_lim, lgM_smCut, 
-                                    mask_gal_agn=mask_gal_agn, extra_frac=extra_frac,)
+    df_num_gal_agn = get_num_galAgn(
+        lc_catalogue,
+        mask_xrlumi_dict,
+        mag_cut,
+        band,
+        lx_lim,
+        lgM_smCut,
+        mask_gal_agn=mask_gal_agn,
+        extra_frac=extra_frac,
+    )
 
-    df_resample_sum = _get_resample_reseed_sum(df_num_gal_agn, mask_xrlumi_dict, lgM_smCut, mag_cut)
+    df_resample_sum = _get_resample_reseed_sum(
+        df_num_gal_agn, mask_xrlumi_dict, lgM_smCut, mag_cut
+    )
     return df_resample_sum
